@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Healthcare vs Life Expectancy", layout="wide")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("C:\\Users\\SAINADH\\Downloads\\OneDrive\\Documents\\Desktop\\who_life_exp.csv")
+    # IMPORTANT: use relative path for Streamlit Cloud
+    df = pd.read_csv("who_life_exp.csv")
     df.columns = df.columns.str.lower().str.replace(" ", "_")
     df = df.dropna(subset=["life_expectancy", "current_health_expenditure_gdp"])
     return df
@@ -35,26 +35,48 @@ filtered_df = df[
     (df["year"].between(year_range[0], year_range[1]))
 ]
 
-# Scatter plot
+# -------------------------------
+# Scatter Plot
+# -------------------------------
 st.subheader("Healthcare Spending vs Life Expectancy")
+
 fig, ax = plt.subplots()
-sns.scatterplot(
-    data=filtered_df,
-    x="current_health_expenditure_gdp",
-    y="life_expectancy",
-    hue="country",
-    ax=ax
-)
+
+for country in filtered_df["country"].unique():
+    country_df = filtered_df[filtered_df["country"] == country]
+    ax.scatter(
+        country_df["current_health_expenditure_gdp"],
+        country_df["life_expectancy"],
+        label=country,
+        alpha=0.7
+    )
+
+ax.set_xlabel("Healthcare Expenditure (% of GDP)")
+ax.set_ylabel("Life Expectancy (Years)")
+ax.legend()
+ax.grid(True)
+
 st.pyplot(fig)
 
-# Trend plot
+# -------------------------------
+# Line Plot
+# -------------------------------
 st.subheader("Life Expectancy Trends Over Time")
+
 fig, ax = plt.subplots()
-sns.lineplot(
-    data=filtered_df,
-    x="year",
-    y="life_expectancy",
-    hue="country",
-    ax=ax
-)
+
+for country in filtered_df["country"].unique():
+    country_df = filtered_df[filtered_df["country"] == country]
+    ax.plot(
+        country_df["year"],
+        country_df["life_expectancy"],
+        marker="o",
+        label=country
+    )
+
+ax.set_xlabel("Year")
+ax.set_ylabel("Life Expectancy (Years)")
+ax.legend()
+ax.grid(True)
+
 st.pyplot(fig)
